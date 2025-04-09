@@ -1,89 +1,170 @@
 ﻿#include <iostream>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
-class Character {
-private:
-    std::string name;  // Приватное поле: имя персонажа
-    int health;        // Приватное поле: уровень здоровья
-    int attack;        // Приватное поле: уровень атаки
-    int defense;       // Приватное поле: уровень защиты
-    static const int MAX_HEALTH = 100; // Максимальное значение здоровья
+class Entity {
+protected:
+    std::string name;
+    int health;
+    int attackPower;
+    int defense;
 
 public:
-    // Конструктор для инициализации данных
-    Character(const std::string& n, int h, int a, int d)
-        : name(n), health(h), attack(a), defense(d) {
+    Entity(const std::string& n, int h, int a, int d)
+        : name(n), health(h), attackPower(a), defense(d) {
     }
 
-    // Метод для получения уровня здоровья
-    int getHealth() const {
-        return health;
-    }
-
-    // Метод для вывода информации о персонаже
-    void displayInfo() const {
-        std::cout << "Name: " << name << ", HP: " << health
-            << ", Attack: " << attack << ", Defense: " << defense << std::endl;
-    }
-
-    // Метод для атаки другого персонажа
-    void attackEnemy(Character& enemy) {
-        int damage = attack - enemy.defense;
+    virtual void attack(Entity& target) {
+        int damage = attackPower - target.getDefense();
         if (damage > 0) {
-            enemy.takeDamage(damage);
-            std::cout << name << " attacks " << enemy.name << " for " << damage << " damage!" << std::endl;
+            target.reduceHealth(damage);
+            std::cout << name << " attacks " << target.getName() << " for " << damage << " damage!\n";
         }
         else {
-            std::cout << name << " attacks " << enemy.name << ", but it has no effect!" << std::endl;
+            std::cout << name << " attacks " << target.getName() << ", but it has no effect!\n";
         }
     }
 
-    // Метод для лечения
-    void heal(int amount) {
-        if (amount > 0) {
-            health += amount;
-            if (health > MAX_HEALTH) {
-                health = MAX_HEALTH;
+    virtual void displayInfo() const {
+        std::cout << "Name: " << name << ", HP: " << health
+            << ", Attack: " << attackPower << ", Defense: " << defense << std::endl;
+    }
+
+    virtual void heal(int amount) {
+        health += amount;
+        std::cout << name << " heals for " << amount << " HP.\n";
+    }
+
+    // Геттеры и сеттеры
+    std::string getName() const { return name; }
+    int getHealth() const { return health; }
+    void setHealth(int h) { health = h; }
+    void reduceHealth(int amount) { health -= amount; }
+    int getAttack() const { return attackPower; }
+    int getDefense() const { return defense; }
+
+    virtual ~Entity() {}
+};
+
+class Character : public Entity {
+public:
+    Character(const std::string& n, int h, int a, int d)
+        : Entity(n, h, a, d) {
+    }
+
+    void attack(Entity& target) override {
+        int damage = attackPower - target.getDefense();
+        if (damage > 0) {
+            if (rand() % 100 < 20) {
+                damage *= 2;
+                std::cout << "Critical hit! ";
             }
-            std::cout << name << " heals for " << amount << " HP!" << std::endl;
+            target.reduceHealth(damage);
+            std::cout << name << " attacks " << target.getName() << " for " << damage << " damage!\n";
+        }
+        else {
+            std::cout << name << " attacks " << target.getName() << ", but it has no effect!\n";
         }
     }
 
-    // Метод для получения урона
-    void takeDamage(int amount) {
-        if (amount > 0) {
-            health -= amount;
-            if (health < 0) {
-                health = 0;
+    void heal(int amount) override {
+        health += amount;
+        std::cout << name << " uses a healing potion and recovers " << amount << " HP!\n";
+    }
+
+    void displayInfo() const override {
+        std::cout << "Character: " << name << ", HP: " << health
+            << ", Attack: " << attackPower << ", Defense: " << defense << std::endl;
+    }
+};
+
+class Monster : public Entity {
+public:
+    Monster(const std::string& n, int h, int a, int d)
+        : Entity(n, h, a, d) {
+    }
+
+    void attack(Entity& target) override {
+        int damage = attackPower - target.getDefense();
+        if (damage > 0) {
+            if (rand() % 100 < 30) {
+                damage += 5;
+                std::cout << "Poisonous attack! ";
             }
+            target.reduceHealth(damage);
+            std::cout << name << " attacks " << target.getName() << " for " << damage << " damage!\n";
         }
+        else {
+            std::cout << name << " attacks " << target.getName() << ", but it has no effect!\n";
+        }
+    }
+
+    void displayInfo() const override {
+        std::cout << "Monster: " << name << ", HP: " << health
+            << ", Attack: " << attackPower << ", Defense: " << defense << std::endl;
+    }
+};
+
+class Boss : public Monster {
+public:
+    Boss(const std::string& n, int h, int a, int d)
+        : Monster(n, h, a, d) {
+    }
+
+    void attack(Entity& target) override {
+        int damage = attackPower - target.getDefense();
+        if (damage > 0) {
+            if (rand() % 100 < 40) {
+                damage += 10;
+                std::cout << "Flaming strike! ";
+            }
+            target.reduceHealth(damage);
+            std::cout << name << " attacks " << target.getName() << " for " << damage << " damage!\n";
+        }
+        else {
+            std::cout << name << " attacks " << target.getName() << ", but it has no effect!\n";
+        }
+    }
+
+    void displayInfo() const override {
+        std::cout << "Boss: " << name << ", HP: " << health
+            << ", Attack: " << attackPower << ", Defense: " << defense << std::endl;
     }
 };
 
 int main() {
-    // Создаем объекты персонажей
-    Character hero("Hero", 90, 20, 10);
-    Character monster("Goblin", 50, 15, 5);
+    srand(static_cast<unsigned>(time(0)));
 
-    // Выводим информацию о персонажах
-    hero.displayInfo();
-    monster.displayInfo();
+    Character hero("Hero", 100, 20, 10);
+    Monster goblin("Goblin", 50, 15, 5);
+    Boss dragon("Dragon", 150, 30, 20);
 
-    // Герой атакует монстра
-    hero.attackEnemy(monster);
-    monster.displayInfo();
+    Entity* entities[] = { &hero, &goblin, &dragon };
 
-    // Монстр лечится
-    monster.heal(20);
-    monster.displayInfo();
+    std::cout << "=== Characters ===\n";
+    for (auto& entity : entities) {
+        entity->displayInfo();
+    }
 
-    // Герой получает урон
-    hero.takeDamage(30);
-    hero.displayInfo();
+    std::cout << "\n=== Battle starts! ===\n";
+    hero.attack(goblin);
+    goblin.attack(hero);
+    dragon.attack(hero);
 
-    // Герой лечится
-    hero.heal(50);
-    hero.displayInfo();
+    std::cout << "\n=== After battle ===\n";
+    for (auto& entity : entities) {
+        entity->displayInfo();
+    }
+
+    std::cout << "\n=== Healing ===\n";
+    hero.heal(20);
+
+    std::cout << "\n=== Final Status ===\n";
+    for (auto& entity : entities) {
+        entity->displayInfo();
+    }
 
     return 0;
 }
+я
