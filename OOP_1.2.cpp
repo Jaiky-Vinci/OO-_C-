@@ -55,7 +55,7 @@ public:
     }
 };
 
-// ✅ Новый класс Boss, наследует от Enemy
+// Новый класс Boss, наследует от Enemy
 class Boss : public Enemy {
 private:
     std::string specialAbility; // Уникальное поле: специальная способность
@@ -85,7 +85,7 @@ int main() {
     std::cout << "\nEnemy Info:" << std::endl;
     monster.displayInfo();
 
-    // ✅ Создаем объект босса и выводим его информацию
+    // Создаем объект босса и выводим его информацию
     Boss finalBoss("Dragon King", 200, "Dragon", "Firestorm");
 
     std::cout << "\nBoss Info:" << std::endl;
